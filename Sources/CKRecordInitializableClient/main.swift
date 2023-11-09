@@ -1,5 +1,6 @@
 import CKRecordInitializable
 import Foundation
+import CloudKit
 
 @Record
 struct SomeRecord {

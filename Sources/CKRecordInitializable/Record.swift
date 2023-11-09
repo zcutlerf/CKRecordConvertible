@@ -80,7 +80,8 @@ public protocol Record: Identifiable, Hashable {
     /// ```
     /// self = SomeRecord(id: record.recordID.recordName, ...)
     /// ```
-    var id: String { get }
+    var id: String { get set }
+    #warning("Remove setter later")
     
     /// Initializes an instance of a Record type from a CKRecord.
     init?(from record: CKRecord)
