@@ -9,6 +9,7 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
         providingMembersOf declaration: some SwiftSyntax.DeclGroupSyntax,
         in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [SwiftSyntax.DeclSyntax] {
+        // Add a new property id that is a UUID().
         return ["let id = UUID()"]
     }
     
@@ -19,6 +20,7 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
         conformingTo protocols: [SwiftSyntax.TypeSyntax],
         in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [SwiftSyntax.ExtensionDeclSyntax] {
+        // Get all of the property names from the type to be expanded.
         let members = declaration.memberBlock.members
         let bindings: [PatternBindingListSyntax.Element] = members.compactMap { member in
             member.decl.as(VariableDeclSyntax.self)?.bindings.first
@@ -27,7 +29,10 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
             binding.as(PatternBindingListSyntax.Element.self)?
                 .pattern.as(IdentifierPatternSyntax.self)?.identifier.text
         }
+        // All of the identifiers, separated by commas, to use as cases of the RecordKeys enum.
         let allIdentifiers = identifierStrings.joined(separator: ", ")
+        
+        // Create the extension.
         let recordExtension: DeclSyntax =
             """
             extension \(type.trimmed): Record {
@@ -36,7 +41,6 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
                 }
             }
             """
-        //TODO: problem is that type is not mirroring anything
         
         guard let recordExtension = recordExtension.as(ExtensionDeclSyntax.self) else {
             return []
