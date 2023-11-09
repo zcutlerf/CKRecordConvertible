@@ -1,4 +1,4 @@
-import CKRecordInitializable
+import CKRecordConvertible
 import Foundation
 import CloudKit
 
@@ -6,8 +6,9 @@ import CloudKit
 struct SomeRecord {
     var property1: String
     var property2: Int
+    var anotherProperty: Date
     
-    func something() {
-        
+    func someMethod() {
+        print("this is a method")
     }
 }

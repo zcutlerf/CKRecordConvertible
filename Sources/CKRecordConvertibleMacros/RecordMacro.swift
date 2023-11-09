@@ -10,7 +10,7 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
         in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [SwiftSyntax.DeclSyntax] {
         // Add a new property id that is a UUID().
-        return ["let id = UUID()"]
+        return ["var id: String"]
     }
     
     public static func expansion(
@@ -25,12 +25,6 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
         let bindings: [PatternBindingListSyntax.Element] = members.compactMap { member in
             member.decl.as(VariableDeclSyntax.self)?.bindings.first
         }
-        let identifierStrings: [String] = bindings.compactMap { binding in
-            binding.as(PatternBindingListSyntax.Element.self)?
-                .pattern.as(IdentifierPatternSyntax.self)?.identifier.text
-        }
-        // All of the properties' identifiers, separated by commas, to use as cases of the RecordKeys enum.
-        let allIdentifiers = identifierStrings.joined(separator: ", ")
         
         // All of the properties' identifiers and types, as a tuple.
         let identifiersAndTypes = bindings.compactMap { binding in
@@ -43,23 +37,38 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
                 return nil
             }
         }
+        // All of the properties' identifier names, separated by commas, to use as cases of the RecordKeys enum.
+        let recordKeysIdentifierNames = identifiersAndTypes.map { (name, _) in
+            "\(name)"
+        }.joined(separator: ", ")
         
         // All of the optional constants we expect from incoming CKRecord, to use in our guard statement in the initializer.
         let accessingValuesFromCKRecord = identifiersAndTypes.map { (name, type) in
-            "let \(name) = record[RecordKeys.\(name).rawValue as? \(type)]"
+            "let \(name) = record[RecordKeys.\(name).rawValue] as? \(type)"
         }.joined(separator: ",\n")
         
         // All of the properties to be filled into the initializer.
-        let fillingInInitializerWithProperties = identifiersAndTypes.map { (name, type) in
+        let fillingInInitializerWithProperties = identifiersAndTypes.map { (name, _) in
             "\(name): \(name)"
         }.joined(separator: ", ")
+        
+        // All of the properties
+        let identifiersAndTypesForInit = identifiersAndTypes.map { (name, type) in
+            "\(name): \(type)"
+        }.joined(separator: ", ")
+        
+        let allPropertiesSetToSelf = identifiersAndTypes.map { (name, _) in
+            "self.\(name) = \(name)"
+        }.joined(separator: "\n")
         
         // Create the extension.
         let recordExtension: DeclSyntax =
             """
             extension \(type.trimmed): Record {
+                static var recordType: String = "\(type.trimmed)"
+            
                 enum RecordKeys: String, CaseIterable {
-                    case \(raw: allIdentifiers)
+                    case \(raw: recordKeysIdentifierNames)
                 }
             
                 init?(from record: CKRecord) {
@@ -67,7 +76,12 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
                         return nil
                     }
                      
-                    self = \(type.trimmed)(id: record.recordID.recordName, \(raw: fillingInInitializerWithProperties)
+                    self = \(type.trimmed)(id: record.recordID.recordName, \(raw: fillingInInitializerWithProperties))
+                }
+            
+                init(id: String = UUID().uuidString, \(raw: identifiersAndTypesForInit)) {
+                    self.id = id
+                    \(raw: allPropertiesSetToSelf)
                 }
             }
             """
@@ -81,7 +95,7 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
 }
 
 @main
-struct CKRecordInitializablePlugin: CompilerPlugin {
+struct CKRecordConvertiblePlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         RecordMacro.self,
     ]
