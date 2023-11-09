@@ -29,10 +29,10 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
             binding.as(PatternBindingListSyntax.Element.self)?
                 .pattern.as(IdentifierPatternSyntax.self)?.identifier.text
         }
-        // All of the identifiers, separated by commas, to use as cases of the RecordKeys enum.
+        // All of the properties' identifiers, separated by commas, to use as cases of the RecordKeys enum.
         let allIdentifiers = identifierStrings.joined(separator: ", ")
         
-        // Guard stuff
+        // All of the properties' identifiers and types, as a tuple.
         let identifiersAndTypes = bindings.compactMap { binding in
             if let name = binding.as(PatternBindingListSyntax.Element.self)?
                 .pattern.as(IdentifierPatternSyntax.self)?.identifier.text,
@@ -44,12 +44,12 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
             }
         }
         
-        // Guard let
+        // All of the optional constants we expect from incoming CKRecord, to use in our guard statement in the initializer.
         let accessingValuesFromCKRecord = identifiersAndTypes.map { (name, type) in
             "let \(name) = record[RecordKeys.\(name).rawValue as? \(type)]"
         }.joined(separator: ",\n")
         
-        // Init fill in
+        // All of the properties to be filled into the initializer.
         let fillingInInitializerWithProperties = identifiersAndTypes.map { (name, type) in
             "\(name): \(name)"
         }.joined(separator: ", ")
@@ -71,20 +71,6 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
                 }
             }
             """
-        
-        /*
-         init?(from record: CKRecord) {
-             guard let displayName = record[RecordKeys.displayName.rawValue] as? String,
-                   let startDate = record[RecordKeys.startDate.rawValue] as? Date,
-                   let startTime = record[RecordKeys.startTime.rawValue] as? Date,
-                   let endTime = record[RecordKeys.endTime.rawValue] as? Date,
-                   let allowableAbsenceDays = record[RecordKeys.allowableAbsenceDays.rawValue] as? Int else {
-                 return nil
-             }
-             
-             self = \(type.trimmed)(id: record.recordID.recordName, displayName: displayName, startDate: startDate, startTime: startTime, endTime: endTime, allowableAbsenceDays: allowableAbsenceDays)
-         }
-         */
         
         guard let recordExtension = recordExtension.as(ExtensionDeclSyntax.self) else {
             return []
