@@ -1,8 +1,12 @@
 import CKRecordInitializable
+import Foundation
 
-let a = 17
-let b = 25
-
-let (result, code) = #stringify(a + b)
-
-print("The value \(result) was produced by the code \"\(code)\"")
+@Record
+struct SomeRecord {
+    var property1: String
+    var property2: Int
+    
+    func something() {
+        
+    }
+}

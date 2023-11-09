@@ -7,40 +7,40 @@ import XCTest
 import CKRecordInitializableMacros
 
 let testMacros: [String: Macro.Type] = [
-    "stringify": StringifyMacro.self,
+    "recordMacro": RecordMacro.self,
 ]
 #endif
 
 final class CKRecordInitializableTests: XCTestCase {
     func testMacro() throws {
-        #if canImport(CKRecordInitializableMacros)
-        assertMacroExpansion(
-            """
-            #stringify(a + b)
-            """,
-            expandedSource: """
-            (a + b, "a + b")
-            """,
-            macros: testMacros
-        )
-        #else
-        throw XCTSkip("macros are only supported when running tests for the host platform")
-        #endif
+//        #if canImport(CKRecordInitializableMacros)
+//        assertMacroExpansion(
+//            """
+//            #stringify(a + b)
+//            """,
+//            expandedSource: """
+//            (a + b, "a + b")
+//            """,
+//            macros: testMacros
+//        )
+//        #else
+//        throw XCTSkip("macros are only supported when running tests for the host platform")
+//        #endif
     }
 
     func testMacroWithStringLiteral() throws {
-        #if canImport(CKRecordInitializableMacros)
-        assertMacroExpansion(
-            #"""
-            #stringify("Hello, \(name)")
-            """#,
-            expandedSource: #"""
-            ("Hello, \(name)", #""Hello, \(name)""#)
-            """#,
-            macros: testMacros
-        )
-        #else
-        throw XCTSkip("macros are only supported when running tests for the host platform")
-        #endif
+//        #if canImport(CKRecordInitializableMacros)
+//        assertMacroExpansion(
+//            #"""
+//            #stringify("Hello, \(name)")
+//            """#,
+//            expandedSource: #"""
+//            ("Hello, \(name)", #""Hello, \(name)""#)
+//            """#,
+//            macros: testMacros
+//        )
+//        #else
+//        throw XCTSkip("macros are only supported when running tests for the host platform")
+//        #endif
     }
 }
