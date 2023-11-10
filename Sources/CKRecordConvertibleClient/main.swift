@@ -8,17 +8,18 @@ struct ChildType {
 
 @Record
 struct SomeRecord {
+    // These properties will be stored in CloudKit, with a recordType of "SomeRecord", and columns named the "stringProperty", "dateProperty", etc (e.g.)
     var stringProperty: String
-    var intProperty: Int = 1
     var dateProperty: Date
-    
-    var arrayOfString: [[String]]
-    var arrayOfInt: [Int] = []
+    var arrayOfArrayOfString: [[String]]
     var arrayOfBool: Array<Bool>
-#warning("Does not ignore optional values yet.")
-    var optional: Int?
     
-    func someMethod() {
-        print("this is a method")
-    }
+    // Properties with default values will not be stored in CloudKit
+    var intPropertyWithDefaultValue: Int = 1
+    var arrayOfInt: [Int] = []
+    
+    // Optional values will not be stored in CloudKit
+    var optionalValue: Int?
+    
+    func someMethod() { }
 }

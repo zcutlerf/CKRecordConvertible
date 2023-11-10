@@ -15,6 +15,8 @@ extension RecordMacro {
         syntaxNodeString += variables.map { variable in
             if let initialValue = variable.initialValue {
                 return "\(variable.name): \(variable.type) = \(initialValue)"
+            } else if variable.type.is(OptionalTypeSyntax.self) {
+                return "\(variable.name): \(variable.type) = nil"
             } else {
                 return "\(variable.name): \(variable.type)"
             }
@@ -31,7 +33,7 @@ extension RecordMacro {
     
     internal static func recordKeys_cases(variables: [VariableDeclaration]) -> SyntaxNodeString {
         SyntaxNodeString(stringLiteral: variables.compactMap { variable in
-            if variable.initialValue == nil {
+            if variable.initialValue == nil && !variable.type.is(OptionalTypeSyntax.self) {
                 return "\(variable.name)"
             } else {
                 return nil
@@ -41,7 +43,7 @@ extension RecordMacro {
     
     internal static func initFromRecord_unwrapCKRecordProperties(variables: [VariableDeclaration]) -> SyntaxNodeString {
         SyntaxNodeString(stringLiteral: variables.compactMap { variable in
-            if variable.initialValue == nil {
+            if variable.initialValue == nil && !variable.type.is(OptionalTypeSyntax.self) {
                 return "let \(variable.name) = record[RecordKeys.\(variable.name).rawValue] as? \(variable.type)"
             } else {
                 return nil
@@ -51,7 +53,7 @@ extension RecordMacro {
     
     internal static func initFromRecord_fillInStandardInit(variables: [VariableDeclaration]) -> SyntaxNodeString {
         SyntaxNodeString(stringLiteral: variables.compactMap { variable in
-            if variable.initialValue == nil {
+            if variable.initialValue == nil && !variable.type.is(OptionalTypeSyntax.self) {
                 return "\(variable.name): \(variable.name)"
             } else {
                 return nil
