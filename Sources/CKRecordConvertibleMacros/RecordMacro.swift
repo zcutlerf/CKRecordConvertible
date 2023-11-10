@@ -17,11 +17,19 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
         
         // All of the properties' identifiers and types, as a tuple.
         let identifiersAndTypes = bindings.compactMap { binding in
+#warning("Ignore if member has default value")
             if let name = binding.as(PatternBindingListSyntax.Element.self)?
-                .pattern.as(IdentifierPatternSyntax.self)?.identifier.text,
-               let type = binding.as(PatternBindingListSyntax.Element.self)?
-                .typeAnnotation?.type.as(IdentifierTypeSyntax.self)?.name.text {
-                return (name: name, type: type)
+                .pattern.as(IdentifierPatternSyntax.self)?.identifier.text {
+                
+                if let type = binding
+                    .typeAnnotation?.type.as(IdentifierTypeSyntax.self)?.name.text {
+                    return (name: name, type: type)
+                } else if let type = binding.typeAnnotation?.type.as(ArrayTypeSyntax.self)?.element.as(IdentifierTypeSyntax.self)?.name.text {
+                    return (name: name, type: "[\(type)]")
+                } else {
+#warning("What else do we need to handle besides arrays?")
+                    return nil
+                }
             } else {
                 return nil
             }
@@ -70,11 +78,19 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
         
         // All of the properties' identifiers and types, as a tuple.
         let identifiersAndTypes = bindings.compactMap { binding in
+#warning("Ignore if member has default value")
             if let name = binding.as(PatternBindingListSyntax.Element.self)?
-                .pattern.as(IdentifierPatternSyntax.self)?.identifier.text,
-               let type = binding.as(PatternBindingListSyntax.Element.self)?
-                .typeAnnotation?.type.as(IdentifierTypeSyntax.self)?.name.text {
-                return (name: name, type: type)
+                .pattern.as(IdentifierPatternSyntax.self)?.identifier.text {
+                
+                if let type = binding
+                    .typeAnnotation?.type.as(IdentifierTypeSyntax.self)?.name.text {
+                    return (name: name, type: type)
+                } else if let type = binding.typeAnnotation?.type.as(ArrayTypeSyntax.self)?.element.as(IdentifierTypeSyntax.self)?.name.text {
+                    return (name: name, type: "[\(type)]")
+                } else {
+#warning("What else do we need to handle besides arrays?")
+                    return nil
+                }
             } else {
                 return nil
             }
