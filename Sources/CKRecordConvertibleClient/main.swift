@@ -2,11 +2,18 @@ import CKRecordConvertible
 import Foundation
 import CloudKit
 
+struct ChildType {
+    
+}
+
 @Record
 struct SomeRecord {
-    var property1: String
-    var property2: Int
-    var anotherProperty: Date
+    var stringProperty: String
+    var intProperty: Int
+    var dateProperty: Date
+    
+    #warning("Collection types not working yet.")
+    var arrayOfInt: [Int]
     
     func someMethod() {
         print("this is a method")

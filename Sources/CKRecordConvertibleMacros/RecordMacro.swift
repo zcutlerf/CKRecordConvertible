@@ -9,8 +9,50 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
         providingMembersOf declaration: some SwiftSyntax.DeclGroupSyntax,
         in context: some SwiftSyntaxMacros.MacroExpansionContext
     ) throws -> [SwiftSyntax.DeclSyntax] {
-        // Add a new property id that is a UUID().
-        return ["var id: String"]
+        // Get all of the property names from the type to be expanded.
+        let members = declaration.memberBlock.members
+        let bindings: [PatternBindingListSyntax.Element] = members.compactMap { member in
+            member.decl.as(VariableDeclSyntax.self)?.bindings.first
+        }
+        
+        // All of the properties' identifiers and types, as a tuple.
+        let identifiersAndTypes = bindings.compactMap { binding in
+            if let name = binding.as(PatternBindingListSyntax.Element.self)?
+                .pattern.as(IdentifierPatternSyntax.self)?.identifier.text,
+               let type = binding.as(PatternBindingListSyntax.Element.self)?
+                .typeAnnotation?.type.as(IdentifierTypeSyntax.self)?.name.text {
+                return (name: name, type: type)
+            } else {
+                return nil
+            }
+        }
+        
+        // All of the properties with their types, for standard initializer signature.
+        let identifiersAndTypesForInit = identifiersAndTypes.map { (name, type) in
+            "\(name): \(type)"
+        }.joined(separator: ", ")
+        
+        // All of the properties, setting to self.
+        let allPropertiesSetToSelf = identifiersAndTypes.map { (name, _) in
+            "self.\(name) = \(name)"
+        }.joined(separator: "\n")
+        
+        // Create the extension.
+        let newMembers: DeclSyntax =
+            """
+            var id: String
+            
+            init(id: String = UUID().uuidString, \(raw: identifiersAndTypesForInit)) {
+                self.id = id
+                \(raw: allPropertiesSetToSelf)
+            }
+            """
+        
+        guard let newMembers = newMembers.as(DeclSyntax.self) else {
+            return []
+        }
+        
+        return [newMembers]
     }
     
     public static func expansion(
@@ -52,15 +94,6 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
             "\(name): \(name)"
         }.joined(separator: ", ")
         
-        // All of the properties
-        let identifiersAndTypesForInit = identifiersAndTypes.map { (name, type) in
-            "\(name): \(type)"
-        }.joined(separator: ", ")
-        
-        let allPropertiesSetToSelf = identifiersAndTypes.map { (name, _) in
-            "self.\(name) = \(name)"
-        }.joined(separator: "\n")
-        
         // Create the extension.
         let recordExtension: DeclSyntax =
             """
@@ -77,11 +110,6 @@ public struct RecordMacro: MemberMacro, ExtensionMacro {
                     }
                      
                     self = \(type.trimmed)(id: record.recordID.recordName, \(raw: fillingInInitializerWithProperties))
-                }
-            
-                init(id: String = UUID().uuidString, \(raw: identifiersAndTypesForInit)) {
-                    self.id = id
-                    \(raw: allPropertiesSetToSelf)
                 }
             }
             """
